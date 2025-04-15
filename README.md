@@ -1,4 +1,32 @@
-- 👋 Hi, I’m @saeedsaeedi1990
+from flask import Flask, render_template
+import yfinance as yf
+import pandas as pd
+import ta
+
+app = Flask(__name__)
+
+def fetch_data(symbol):
+    data = yf.download(symbol, period="30d", interval="1h")
+    data.dropna(inplace=True)
+
+    # محاسبه RSI و MACD
+    data["RSI"] = ta.momentum.RSIIndicator(data["Close"]).rsi()
+    macd = ta.trend.MACD(data["Close"])
+    data["MACD"] = macd.macd()
+    data["Signal"] = macd.macd_signal()
+
+    return data.tail(50)
+
+@app.route("/")
+def index():
+    btc = fetch_data("BTC-USD")
+    eth = fetch_data("ETH-USD")
+
+    return render_template("index.html", btc=btc.tail(10).to_dict(orient="records"), 
+                                         eth=eth.tail(10).to_dict(orient="records"))
+
+if __name__ == "__main__":
+    app.run(debug=True)- 👋 Hi, I’m @saeedsaeedi1990
 - 👀 I’m interested in ...
 - 🌱 I’m currently learning ...
 - 💞️ I’m looking to collaborate on ...
